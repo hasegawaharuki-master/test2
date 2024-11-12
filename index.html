@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合計金額算出</title>
+</head>
+<body>
+    <h2>商品の合計金額を算出</h2>
+
+    <!-- パスワード入力フォーム -->
+    <div id="login-form">
+        <label>パスワードを入力してください:</label>
+        <input type="password" id="password">
+        <button onclick="verifyPassword()">ログイン</button>
+    </div>
+
+    <!-- 商品リストと合計金額表示 -->
+    <div id="product-section" style="display: none;">
+        <div id="product-list"></div>
+        <h3>合計金額: <span id="total">¥0</span></h3>
+        <button id="paypay-button" style="display: none;" onclick="redirectToPayPay()">PayPayで支払う</button>
+    </div>
+
+    <script>
+        // 許可されたパスワード
+        const correctPassword = "1234";
+
+        // 商品データの配列
+        const products = [
+            { name: "商品A", price: 1000 },
+            { name: "商品B", price: 1500 },
+            { name: "商品C", price: 2000 },
+            { name: "商品D", price: 2500 },
+            // ここに新しい商品を追加できる
+        ];
+
+        const productList = document.getElementById('product-list');
+        const totalElement = document.getElementById('total');
+        const productSection = document.getElementById('product-section');
+        const payPayButton = document.getElementById('paypay-button');
+
+        // パスワード認証関数
+        function verifyPassword() {
+            const enteredPassword = document.getElementById('password').value;
+            if (enteredPassword === correctPassword) {
+                document.getElementById('login-form').style.display = 'none';
+                productSection.style.display = 'block';
+                renderProducts();
+                setEventListeners();
+            } else {
+                alert("パスワードが間違っています。");
+            }
+        }
+
+        // 商品のHTMLを生成する関数
+        function renderProducts() {
+            products.forEach((product, index) => {
+                const productContainer = document.createElement('div');
+                productContainer.innerHTML = `
+                    <label>
+                        <input type="checkbox" class="item" data-price="${product.price}" data-index="${index}">
+                        ${product.name} - ¥${product.price}
+                        <input type="number" class="quantity" value="1" min="1" disabled>
+                    </label>
+                `;
+                productList.appendChild(productContainer);
+            });
+        }
+
+        // 合計金額を計算する関数
+        function calculateTotal() {
+            let total = 0;
+            const checkboxes = document.querySelectorAll('.item');
+
+            checkboxes.forEach((checkbox, index) => {
+                const quantityInput = document.querySelectorAll('.quantity')[index];
+                if (checkbox.checked) {
+                    const price = parseInt(checkbox.getAttribute('data-price'));
+                    const quantity = parseInt(quantityInput.value);
+                    total += price * quantity;
+                }
+            });
+            totalElement.textContent = `¥${total}`;
+
+            // 合計金額が0以上の場合、PayPayボタンを表示
+            payPayButton.style.display = total > 0 ? 'inline-block' : 'none';
+        }
+
+        // チェックボックスと数量入力のイベントリスナーを設定する関数
+        function setEventListeners() {
+            const checkboxes = document.querySelectorAll('.item');
+            checkboxes.forEach((checkbox, index) => {
+                const quantityInput = document.querySelectorAll('.quantity')[index];
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                        quantityInput.disabled = false;
+                    } else {
+                        quantityInput.disabled = true;
+                        quantityInput.value = 1;
+                    }
+                    calculateTotal();
+                });
+                quantityInput.addEventListener('input', calculateTotal);
+            });
+        }
+
+        // PayPayのリンクにリダイレクトする関数
+        function redirectToPayPay() {
+            window.location.href = "paypay://";
+        }
+    </script>
+</body>
+</html>
